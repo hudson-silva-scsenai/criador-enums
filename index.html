@@ -100,8 +100,8 @@
                         .normalize("NFD") // Normalize to decompose combined characters
                         .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
                         .toUpperCase() // Convert to uppercase
-                        .replace(/[^A-Z0-9\s]/g, '') // Remove non-alphanumeric characters except spaces
-                        .split(' ') // Split by spaces
+                        .replace(/[^A-Z0-9\s]/g, ' ') // Remove non-alphanumeric characters except spaces
+                        .split(/\s+/) // Split by anything that isnt a letter
                         .filter(word => !prepositionsAndConjunctions.includes(word.toLowerCase())) // Remove prepositions/conjunctions
                         .join('_') // Join with underscores
                         .replace(/_+/g, '_') // Replace multiple underscores with a single one
