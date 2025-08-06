@@ -1,127 +1,129 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Enum Java</title>
+    <title>Gerador de Enums Java</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
+            font-family: sans-serif;
+            line-height: 1.6;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 800px;
-            margin: 0 auto;
+            margin: auto;
+            background-color: #f4f4f4;
+            color: #333;
         }
         h1 {
-            color: #333;
-            text-align: center;
+            color: #2c3e50;
         }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            color: #34495e;
         }
         textarea {
             width: 100%;
             padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box;
             font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
         }
         button {
-            background-color: #007bff;
+            background-color: #3498db;
             color: white;
-            padding: 10px 15px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
             font-size: 16px;
-            width: 100%;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #2980b9;
         }
-        pre {
-            background-color: #e2e2e2;
-            padding: 15px;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: monospace;
-            overflow-x: auto;
-        }
-        .output-section {
+        #output-container {
             margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gerador de Enum Java</h1>
-        <p>Cole seus dados CSV (ID, Descrição) na área de texto abaixo e clique em "Gerar Enum".</p>
 
-        <label for="csvInput">Entrada CSV:</label>
-        <textarea id="csvInput" rows="10" placeholder="Exemplo:&#10;296,Acolhimento de início de período&#10;297,Conselho de classe"></textarea>
+    <h1>Gerador de Enums Java</h1>
+    <p>Insira seu conteúdo CSV na caixa de texto abaixo. A primeira coluna será usada para o nome do enum e as demais como argumentos do construtor.</p>
 
-        <button onclick="generateEnum()">Gerar Enum</button>
+    <hr>
 
-        <div class="output-section">
-            <h2>Saída do Enum:</h2>
-            <pre id="enumOutput"></pre>
-        </div>
+    <div class="input-section">
+        <h2>Entrada CSV</h2>
+        <textarea id="csvInput" rows="10" placeholder="Cole seu conteúdo CSV aqui..."></textarea>
+    </div>
+
+    <button onclick="generateEnum()">Gerar Enum</button>
+
+    <hr>
+
+    <div id="output-container">
+        <h2>Saída Java Enum</h2>
+        <textarea id="enumOutput" rows="10" readonly placeholder="O resultado aparecerá aqui..."></textarea>
     </div>
 
     <script>
         function generateEnum() {
             const csvInput = document.getElementById('csvInput').value;
-            const lines = csvInput.split('\n').filter(line => line.trim() !== '');
-            let enumEntries = [];
-
-            const prepositionsAndConjunctions = ["de", "da", "do", "das", "dos", "e", "ou"];
+            const lines = csvInput.trim().split('\n');
+            const prepositions = [" de ", " do ", " da ", " dos ", " das ", " e ", " ou ", " para ", " ao ", " a ", " o ", " as ", " os"];
+            const resultLines = [];
+            const hasArgs = lines[0].includes(',');
 
             lines.forEach(line => {
                 const parts = line.split(',');
-                if (parts.length >= 2) {
-                    const id = parts[0].trim();
-                    const description = parts.slice(1).join(',').trim(); // Handle descriptions with commas
+                let enumName = parts[0];
 
-                    // Generate enum name
-                    let enumName = description
-                        .normalize("NFD") // Normalize to decompose combined characters
-                        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-                        .toUpperCase() // Convert to uppercase
-                        .replace(/[^A-Z0-9\s]/g, ' ') // Remove non-alphanumeric characters except spaces
-                        .split(/\s+/) // Split by anything that isnt a letter
-                        .filter(word => !prepositionsAndConjunctions.includes(word.toLowerCase())) // Remove prepositions/conjunctions
-                        .join('_') // Join with underscores
-                        .replace(/_+/g, '_') // Replace multiple underscores with a single one
-                        .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+                // Remove acentos
+                enumName = enumName.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
-                    if (enumName === "") { // Fallback for empty generated names
-                        enumName = "INVALID_ENTRY_" + id;
-                    }
+                // Converte para uppercase e substitui preposições e caracteres especiais
+                let processedName = enumName.toLowerCase();
+                prepositions.forEach(prep => {
+                    // Usa regex para garantir que a preposição seja uma palavra completa
+                    processedName = processedName.replace(new RegExp(prep, 'g'), '_');
+                });
+                
+                // Remove caracteres especiais e espaços, substituindo por _
+                processedName = processedName.replace(/[^a-zA-Z0-9_]/g, '_');
+                
+                // Remove múltiplos underscores e underscores no início/fim
+                processedName = processedName.replace(/_+/g, '_').replace(/^_|_$/g, '');
 
-                    enumEntries.push(`${enumName}(${id}, "${description}")`);
+                // Converte para uppercase
+                processedName = processedName.toUpperCase();
+
+                if (hasArgs) {
+                    const args = parts.slice(1).map(arg => {
+                        // Verifica se o argumento é um número. Se não, adiciona aspas.
+                        if (!isNaN(arg) && !isNaN(parseFloat(arg))) {
+                            return arg;
+                        } else {
+                            return `"${arg.trim()}"`;
+                        }
+                    }).join(', ');
+                    resultLines.push(`${processedName}(${args})`);
+                } else {
+                    resultLines.push(processedName);
                 }
             });
 
-            const enumOutput = document.getElementById('enumOutput');
-            if (enumEntries.length > 0) {
-                enumOutput.textContent = enumEntries.join(',\n') + ';';
-            } else {
-                enumOutput.textContent = "Nenhuma entrada válida para gerar o enum.";
-            }
+            const output = resultLines.join(',\n') + (resultLines.length > 0 ? ';' : '');
+            document.getElementById('enumOutput').value = output;
         }
     </script>
+
 </body>
 </html>
